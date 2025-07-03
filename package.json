@@ -1,0 +1,12 @@
+{
+  "name": "livetrend-aggregator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler publish"
+  },
+  "devDependencies": {
+    "wrangler": "^3.13.0"
+  }
+}
