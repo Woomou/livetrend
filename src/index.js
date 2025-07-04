@@ -1,11 +1,22 @@
 export default {
   async fetch(request, env, ctx) {
+    if (!env.NEWS_CACHE) {
+      return new Response(JSON.stringify({ error: 'NEWS_CACHE not configured' }), {
+        headers: { 'content-type': 'application/json;charset=UTF-8' }
+      });
+    }
+    
     const data = await env.NEWS_CACHE.get('news-feed');
     return new Response(data || '[]', {
       headers: { 'content-type': 'application/json;charset=UTF-8' }
     });
   },
   async scheduled(event, env, ctx) {
+    if (!env.NEWS_CACHE) {
+      console.log('NEWS_CACHE not configured, skipping scheduled update');
+      return;
+    }
+    
     const hn = await fetchHackerNews();
     const reddit = await fetchReddit(env);
     const feed = [...hn, ...reddit];
@@ -24,7 +35,8 @@ async function fetchHackerNews() {
       return {
         title: item.title,
         description: item.text || '',
-        link: item.url || `https://news.ycombinator.com/item?id=${id}`
+        link: item.url || `https://news.ycombinator.com/item?id=${id}`,
+        source: 'hackernews'
       };
     }));
     return items;
@@ -59,7 +71,8 @@ async function fetchReddit(env) {
     const items = json.data.children.map(child => ({
       title: child.data.title,
       description: child.data.selftext || '',
-      link: 'https://reddit.com' + child.data.permalink
+      link: 'https://reddit.com' + child.data.permalink,
+      source: 'reddit'
     }));
     return items;
   } catch (err) {
